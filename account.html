@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Create your Dotty Elegance account to save favorites, manage your profile, and track orders.">
+    <title>My Account | Dotty Elegance</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+    <h1>Dotty Elegance</h1>
+    <nav aria-label="Main navigation">
+        <a href="index.html">Home</a>
+        <a href="shop.html">Shop</a>
+        <a href="about.html">About Us</a>
+        <a href="contact.html">Contact</a>
+        <a href="account.html" class="active" aria-current="page">My Account</a>
+    </nav>
+</header>
+
+<main class="account-container">
+    <section id="auth-panel" class="page-container account-panel">
+        <h1 id="auth-title">Welcome back</h1>
+        <p id="auth-intro">Sign in to manage your profile, saved favorites, and orders.</p>
+        <p>Your account, favorites, and delivery details are used to manage your orders. Do not enter payment-card details here.</p>
+        <p id="connection-message" class="form-message" role="status" aria-live="polite"></p>
+
+        <form id="login-form" class="account-form">
+            <label for="login-email">Email address</label>
+            <input id="login-email" type="email" autocomplete="email" required>
+            <label for="login-password">Password</label>
+            <input id="login-password" type="password" autocomplete="current-password" minlength="12" required>
+            <button type="submit" class="primary-button">Sign in</button>
+            <p><button type="button" class="text-button" data-reset-password>Forgot your password?</button></p>
+            <p>New to Dotty Elegance? <button type="button" class="text-button" data-show-signup>Create an account</button></p>
+        </form>
+
+        <form id="signup-form" class="account-form" hidden>
+            <label for="signup-name">Full name</label>
+            <input id="signup-name" type="text" autocomplete="name" maxlength="120" required>
+            <label for="signup-phone">Phone number</label>
+            <input id="signup-phone" type="tel" autocomplete="tel" maxlength="30" required>
+            <label for="signup-email">Email address</label>
+            <input id="signup-email" type="email" autocomplete="email" required>
+            <label for="signup-password">Create a password</label>
+            <input id="signup-password" type="password" autocomplete="new-password" minlength="12" required>
+            <button type="submit" class="primary-button">Create account</button>
+            <p>Already have an account? <button type="button" class="text-button" data-show-login>Sign in</button></p>
+        </form>
+
+        <div id="reset-request-form" class="account-form" hidden>
+            <p>For account safety, password resets are handled by our support team.</p>
+            <a class="primary-button" href="https://wa.me/254728939472?text=Hello%20Dotty%20Elegance%2C%20I%20need%20help%20resetting%20my%20account%20password." target="_blank" rel="noopener noreferrer">Ask for password reset help</a>
+            <p><button type="button" class="text-button" data-show-login>Back to sign in</button></p>
+        </div>
+    </section>
+
+    <div id="dashboard" hidden>
+        <section class="account-heading">
+            <div>
+                <h1>My account</h1>
+                <p id="account-email"></p>
+            </div>
+            <div class="account-heading-actions">
+                <a id="admin-link" class="secondary-button" href="admin.html" hidden>Store admin</a>
+                <button id="sign-out-button" class="secondary-button" type="button">Sign out</button>
+            </div>
+        </section>
+
+        <p id="account-message" class="form-message" role="status" aria-live="polite"></p>
+
+        <section class="account-section page-container">
+            <h2>Your delivery profile</h2>
+            <form id="profile-form" class="account-form">
+                <label for="profile-name">Full name</label>
+                <input id="profile-name" type="text" maxlength="120" required>
+                <label for="profile-phone">Phone number</label>
+                <input id="profile-phone" type="tel" maxlength="30" required>
+                <label for="profile-address">Delivery address</label>
+                <textarea id="profile-address" rows="3" maxlength="500" placeholder="Add your preferred delivery address"></textarea>
+                <button type="submit" class="primary-button">Save profile</button>
+            </form>
+            <form id="password-form" class="account-form">
+                <h3>Change password</h3>
+                <label for="current-password">Current password</label>
+                <input id="current-password" type="password" autocomplete="current-password" minlength="12" required>
+                <label for="new-password">New password</label>
+                <input id="new-password" type="password" autocomplete="new-password" minlength="12" required>
+                <button type="submit" class="primary-button">Update password</button>
+            </form>
+        </section>
+
+        <section class="account-section page-container">
+            <h2>Your order</h2>
+            <div id="cart-items" class="account-list"></div>
+            <p id="cart-total" class="cart-total"></p>
+            <form id="checkout-form" class="account-form">
+                <p>Orders are requests for the store to confirm. Payment and delivery details will be confirmed with you.</p>
+                <button type="submit" class="primary-button">Place order</button>
+            </form>
+            <a href="shop.html" class="secondary-button">Continue shopping</a>
+        </section>
+
+        <section class="account-section page-container">
+            <h2>Saved favorites</h2>
+            <div id="favorite-items" class="account-list"></div>
+        </section>
+
+        <section class="account-section page-container">
+            <h2>Order history &amp; tracking</h2>
+            <div id="order-history" class="account-list"></div>
+        </section>
+    </div>
+</main>
+
+<footer>
+    <p>&copy; 2026 Dotty Elegance. All rights reserved.</p>
+    <p>Follow us on <a href="https://www.instagram.com/dotty_stylist/" target="_blank" rel="noopener noreferrer">Instagram</a> |
+        <a href="https://www.tiktok.com/@dotty6259" target="_blank" rel="noopener noreferrer">TikTok</a></p>
+</footer>
+
+<script src="account.js?v=3"></script>
+<script src="customer-support.js"></script>
+</body>
+</html>

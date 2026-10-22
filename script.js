@@ -1,91 +1,199 @@
-document.addEventListener('DOMContentLoaded', function () {
-  // Header animation
-  const headerEl = document.querySelector('header');
-  const shopHeaderEl = document.querySelector('.shop-header');
+document.addEventListener("DOMContentLoaded", () => {
+  const header = document.querySelector("header");
+  const shopHeader = document.querySelector(".shop-header");
+  const cartKey = "dotty-cart";
+  const shopMessage = document.querySelector("#shop-message");
+  const cartLink = document.querySelector("#cart-link");
 
-  if (headerEl) {
-    headerEl.classList.remove('header-start-hidden');
-    headerEl.classList.add('animate-fadeDown');
+  if (header) {
+    header.classList.remove("header-start-hidden");
+    header.classList.add("animate-fadeDown");
   }
-  if (shopHeaderEl) {
-    shopHeaderEl.classList.remove('shopheader-start-hidden');
-    shopHeaderEl.classList.add('animate-fadeIn');
+  if (shopHeader) {
+    shopHeader.classList.remove("shopheader-start-hidden");
+    shopHeader.classList.add("animate-fadeIn");
   }
 
-  // Staggered product reveal
-  const cards = document.querySelectorAll('.product-card');
-  cards.forEach((card, i) => {
-    card.classList.add('product-start-hidden');
-    setTimeout(() => {
-      card.classList.remove('product-start-hidden');
-      card.classList.add('animate-zoomIn');
-    }, 180 + i * 120);
+  document.querySelectorAll(".product-card").forEach((card, index) => {
+    card.classList.add("product-start-hidden");
+    window.setTimeout(() => {
+      card.classList.remove("product-start-hidden");
+      card.classList.add("animate-zoomIn");
+    }, 180 + index * 120);
   });
-});
 
+  function showShopMessage(message, isError = false) {
+    if (!shopMessage) {
+      return;
+    }
+    shopMessage.textContent = message;
+    shopMessage.classList.toggle("is-error", isError);
+  }
 
-// Product filtering
-const filterButtons = document.querySelectorAll(".filter-btn");
-const products = document.querySelectorAll(".product-card");
+  function productIdFromImage(imageUrl) {
+    const fileName = new URL(imageUrl, window.location.href).pathname.split("/").pop();
+    return decodeURIComponent(fileName)
+      .replace(/\.[^.]+$/, "")
+      .normalize("NFKD")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "");
+  }
 
-filterButtons.forEach(button => {
-  button.addEventListener("click", () => {
-    // Remove active class from all buttons
-    filterButtons.forEach(btn => btn.classList.remove("active"));
-    button.classList.add("active");
+  function getCart() {
+    try {
+      const cart = JSON.parse(localStorage.getItem(cartKey) || "[]");
+      if (!Array.isArray(cart)) {
+        throw new Error("Invalid basket data.");
+      }
+      return cart.filter(
+        (item) =>
+          item &&
+          typeof item.productId === "string" &&
+          Number.isInteger(item.quantity) &&
+          item.quantity > 0 &&
+          item.quantity <= 20
+      );
+    } catch {
+      showShopMessage("Your saved basket could not be read. Clear this browser's site data to start a new order.", true);
+      return [];
+    }
+  }
 
-    const filterValue = button.getAttribute("data-filter");
+  function updateCartCount() {
+    const count = getCart().reduce((sum, item) => sum + item.quantity, 0);
+    if (cartLink) {
+      cartLink.textContent = `My order (${count})`;
+    }
+  }
 
-    products.forEach(product => {
-      if (filterValue === "all" || product.getAttribute("data-category") === filterValue) {
-        product.style.display = "block";
-      } else {
-        product.style.display = "none";
+  async function apiRequest(route, options = {}) {
+    const response = await fetch(route, {
+      credentials: "same-origin",
+      ...options,
+      headers: {
+        ...(options.body ? { "Content-Type": "application/json" } : {}),
+        ...options.headers
       }
     });
-  });
-});
-
-// Check if URL has a category in the hash
-const initialCategory = window.location.hash.replace('#', '');
-if (initialCategory) {
-  const initialButton = document.querySelector(`.filter-btn[data-filter="${initialCategory}"]`);
-  if (initialButton) {
-    initialButton.click();
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.error || "The request could not be completed.");
+    }
+    return data;
   }
-}
 
+  const filterButtons = Array.from(document.querySelectorAll(".filter-btn"));
+  const products = document.querySelectorAll(".product-card");
+  const categoryNotice = document.querySelector(".category-notice");
 
-// WhatsApp order button logic
-document.querySelectorAll('.btn-buy').forEach(button => {
-  button.addEventListener('click', function (event) {
-    event.preventDefault();
+  function filterProducts(category) {
+    filterButtons.forEach((button) => {
+      const isActive = button.dataset.filter === category;
+      button.classList.toggle("active", isActive);
+      button.setAttribute("aria-pressed", String(isActive));
+    });
+    products.forEach((product) => {
+      product.hidden = category !== "all" && product.dataset.category !== category;
+    });
+    if (categoryNotice) {
+      categoryNotice.hidden = category !== categoryNotice.dataset.category;
+    }
+  }
 
-    const productCard = this.closest('.product-card');
-    const name = productCard.querySelector('h4').innerText;
-    const price = productCard.querySelector('.price').innerText;
-    const imgSrc = productCard.querySelector('img').src;
-
-    // Your Kenya WhatsApp number
-    const phoneNumber = "254728939472"; // <-- replace with your number
-
-    // Formatted Kenya-only message
-   const message =
-   `${imgSrc}\n\n` +
-    "🌸 Luxe by Dotty 🌸\n" +
-    "━━━━━━━━━━━━━━━\n" +
-    "📦 Product: " + name + "\n" +
-    "💰 Price: " + price + "\n" +
-    "🖼 Photo: " + imgSrc + "\n" +
-    "━━━━━━━━━━━━━━━\n" +
-    "🚚 Delivery: All over Kenya Only\n\n" +
-    "Hi, I’d like to place an order for this item. Please confirm availability.";
-
-
-    // Create WhatsApp link
-    const url = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
-
-    // Open WhatsApp with prefilled message
-    window.open(url, '_blank');
+  filterButtons.forEach((button) => {
+    button.addEventListener("click", () => filterProducts(button.dataset.filter));
   });
+  const initialCategory = window.location.hash.slice(1);
+  const initialButton = filterButtons.find(
+    (button) => button.dataset.filter === initialCategory
+  );
+  filterProducts(initialButton ? initialButton.dataset.filter : "all");
+  updateCartCount();
+
+  const productIds = [];
+  document.querySelectorAll(".product-card").forEach((card) => {
+    const productId = productIdFromImage(card.querySelector("img").src);
+    productIds.push(productId);
+
+    const actions = document.createElement("div");
+    actions.className = "product-actions";
+    const favoriteButton = document.createElement("button");
+    favoriteButton.type = "button";
+    favoriteButton.className = "favorite-toggle";
+    favoriteButton.dataset.productId = productId;
+    favoriteButton.setAttribute("aria-pressed", "false");
+    favoriteButton.textContent = "♡ Save";
+    favoriteButton.addEventListener("click", async () => {
+      try {
+        const { user } = await apiRequest("/api/auth/me");
+        if (!user) {
+          window.location.href = "account.html#signup";
+          return;
+        }
+
+        const isSaved = favoriteButton.getAttribute("aria-pressed") === "true";
+        await apiRequest(
+          isSaved ? `/api/favorites/${encodeURIComponent(productId)}` : "/api/favorites",
+          isSaved
+            ? { method: "DELETE" }
+            : { method: "POST", body: JSON.stringify({ productId }) }
+        );
+        favoriteButton.setAttribute("aria-pressed", String(!isSaved));
+        favoriteButton.textContent = isSaved ? "♡ Save" : "♥ Saved";
+        showShopMessage(isSaved ? "Favorite removed." : "Product saved to your favorites.");
+      } catch (error) {
+        showShopMessage(error.message, true);
+      }
+    });
+
+    const addButton = document.createElement("button");
+    addButton.type = "button";
+    addButton.className = "add-to-order";
+    addButton.textContent = "Add to order";
+    addButton.addEventListener("click", () => {
+      const cart = getCart();
+      const existing = cart.find((item) => item.productId === productId);
+      if (existing) {
+        if (existing.quantity >= 20) {
+          showShopMessage("You can order up to 20 of the same item at a time.", true);
+          return;
+        }
+        existing.quantity += 1;
+      } else {
+        cart.push({ productId, quantity: 1 });
+      }
+      try {
+        localStorage.setItem(cartKey, JSON.stringify(cart));
+        updateCartCount();
+        showShopMessage(`${card.querySelector("h4").textContent.trim()} added to your order.`);
+      } catch {
+        showShopMessage("Your basket could not be saved in this browser. Check your browser storage settings.", true);
+      }
+    });
+    actions.append(favoriteButton, addButton);
+    card.querySelector(".product-info").append(actions);
+  });
+
+  if (productIds.length) {
+    apiRequest("/api/auth/me")
+      .then(({ user }) => {
+        if (!user) {
+          return null;
+        }
+        return apiRequest("/api/favorites");
+      })
+      .then((data) => {
+        if (!data) {
+          return;
+        }
+        const savedIds = new Set(data.favorites.map((favorite) => favorite.id));
+        document.querySelectorAll(".favorite-toggle").forEach((button) => {
+          const isSaved = savedIds.has(button.dataset.productId);
+          button.setAttribute("aria-pressed", String(isSaved));
+          button.textContent = isSaved ? "♥ Saved" : "♡ Save";
+        });
+      })
+      .catch((error) => showShopMessage(error.message, true));
+  }
 });
